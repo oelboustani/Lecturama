@@ -1,2 +1,2 @@
 # Lecturama
-A repository where you can find some lecture recordings
+A repository where homework and lecture notes can live together in harmony.
