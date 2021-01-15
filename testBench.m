@@ -1,4 +1,3 @@
-clc
 close all
 clear all
 
@@ -12,7 +11,7 @@ dataIn = randn(1000,1);
 dataOut = filter(lpFilt,dataIn);
 return
 
-[rmsEVM,maxEVM,pctEVM,numSym] = evm(tx_data,rx_data) 
+[rmsEVM,maxEVM,pctEVM,numSym] = evm(tx_data,rx_data)
 M = 8;
 data = (0:M-1);
 data = [3 1 5 2 4 0 7 7 0 7 1 2 4 7 6 0 4 4 3 7 1 0 ];
@@ -31,7 +30,7 @@ for k = 1:M
         dec2base(mapgray(k),2,3));
      text(real(symgray(k))-0.2,imag(symgray(k))+0.3,...
          num2str(mapgray(k)));
-    
+
     text(real(symbin(k))-0.2,imag(symbin(k))-.15,...
         dec2base(mapbin(k),2,3),'Color',[1 0 0]);
     text(real(symbin(k))-0.2,imag(symbin(k))-.3,...
