@@ -1,6 +1,6 @@
+clc
 clear all
 close all
-clc
 
 Fs = 80e6;
 
