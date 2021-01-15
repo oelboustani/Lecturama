@@ -15,6 +15,11 @@ phz = 0;
 symgray = pskmod(data,M,phz,'gray');
 mapgray = pskdemod(symgray,M,phz,'gray');
 
+M = 8;
+data = (0:M-1);
+data = [3 1 5 2 4 0 7 7 0 7 1 2 4 7 6 0 4 4 3 7 1 0 ];
+phz = 0;
+
 symbin = pskmod(data,M,phz,'bin');
 mapbin = pskdemod(symbin,M,phz,'bin');
 
