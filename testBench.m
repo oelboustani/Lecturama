@@ -6,7 +6,13 @@ clear all
 % X = randi([0 1], [ArraySize 1]);
 % PSK = pskmod(X, ArraySize);
 % scatterplot(PSK)
+fs = 10e3;
+dataIn = randn(1000,1);
+[y, lpFilt] = lowpass(dataIn,150,fs);
+dataOut = filter(lpFilt,dataIn);
+return
 
+[rmsEVM,maxEVM,pctEVM,numSym] = evm(tx_data,rx_data) 
 M = 8;
 data = (0:M-1);
 data = [3 1 5 2 4 0 7 7 0 7 1 2 4 7 6 0 4 4 3 7 1 0 ];
