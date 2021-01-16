@@ -3,9 +3,9 @@ clear all
 close all
 
 Fs = 80e6;
-
 Fc = 10e6; %carrier freq
-
+Fs = 1e6;   % Fs =  1 MHz
+Fc = 10*Fs; % Fc = 10 MHz
 
 M = 8;
 % data_t = [1 5 2 4 0 7 7 0 7 1 2 4 7 6 0 4 4 3 7 1];
@@ -89,6 +89,7 @@ BW = 10e6;
 % return
 
 figure(11)
+disp('Figure 11 - downconversion')
 subplot(211)
 pwelch(I_down,[],[],[],Fs, 'centered')
 title('In-phase power spectrum')
@@ -96,8 +97,8 @@ subplot(212)
 pwelch(Q_down,[],[],[],Fs, 'centered')
 title('Quadrature power spectrum')
 
-I_down_filtered = lowpass(I_down,BW,Fs,'ImpulseResponse','iir','Steepness',0.95);
-Q_down_filtered = lowpass(Q_down,BW,Fs,'ImpulseResponse','iir','Steepness',0.95);
+I_down_filtered = lowpass(I_down,BW,2*Fs,'ImpulseResponse','iir','Steepness',0.95);
+Q_down_filtered = lowpass(Q_down,BW,2*Fs,'ImpulseResponse','iir','Steepness',0.95);
 
 figure(12)
 subplot(211)

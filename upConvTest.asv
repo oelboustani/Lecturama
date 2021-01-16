@@ -1,0 +1,14 @@
+% upConvTest
+M = 8;              % Modulation order
+k = log2(M);        % Bits/symbol
+n = 1e3;            % Transmitted bits
+nSamp = 4;          % Samples per symbol
+span = 6;           % Filter span in symbols
+rolloff = 0.25;     % Rolloff factor
+Fs =  1e3;          % Sampling rate
+Fc = 10e3;          % Center frequency
+nHold = 20*nSamp;   % Width of rectangular wave
+intpF = 20;         % Interpolation factor
+x = randi([0 M-1],n,1); % Random bits
+
+LO = cos(2*pi*Fc*t); t = linspace(0, 1/Fs, size(x));
