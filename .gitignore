@@ -1,0 +1,4 @@
+$ cat .gitignore
+# exclude word document and pdf
+*.docx
+*.pdf

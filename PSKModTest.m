@@ -3,6 +3,7 @@ clc
 clear all
 close all
 
+% Set up parameters
 Fs = 2.0e9;         % Sampling rate
 Fc = 0.3e9;         % Center frequency
 BW = Fc/3;          % Bandwidth
@@ -13,40 +14,53 @@ nSamp = 10*k;       % Samples per symbol
 span = 1;           % Filter span in symbols
 rolloff = 0.2;      % Rolloff factor
 
+% Set up error vector magnitude 
 evm = comm.EVM('MaximumEVMOutputPort',true,...
     'XPercentileEVMOutputPort',true, 'XPercentileValue',90,...
     'SymbolCountOutputPort',true);
 
-txdata = randi([0 M-1],n,1); % Random bits
+% Create random data
+txdata = randi([0 M-1],n,1); 
 
+% Apply PSK modulation
 phi = 0;
 txSig = pskmod(txdata,M,phi);
 txSigI = real(txSig);
 txSigQ = imag(txSig);
+
+% Apply ZOH function
 txSigSpec = kron(txSig, ones(nSamp,1));
 
+% Apply pusle-shaping with SRRC
 txSigShapeI = txfilter(txSigI, nSamp, span, rolloff);
 txSigShapeQ = txfilter(txSigQ, nSamp, span, rolloff);
 txSigShape = txSigShapeI + 1j*txSigShapeQ;
 
+% Apply upconversion
 txSigUp = upConvert(txSigShape,Fc,Fs);
+
+% Apply downconversion
 [rxSigDwnI, rxSigDwnQ] = dwnConvert(txSigUp,Fc,Fs);
 rxSigDwn = rxSigDwnI + 1j*rxSigDwnQ;
 
+% Apply lowpass filtering
 rxSigLPFI = lowpass(rxSigDwnI,BW,Fs,'ImpulseResponse','iir','Steepness',0.95);
 rxSigLPFQ = lowpass(rxSigDwnQ,BW,Fs,'ImpulseResponse','iir','Steepness',0.95);
 
+% Apply pusle-shaping with SRRC
 rxSigShapeI = rxfilter(rxSigLPFI, nSamp, span, rolloff);
 rxSigShapeQ = rxfilter(rxSigLPFQ, nSamp, span, rolloff);
 rxSig = rxSigShapeI + 1j*rxSigShapeQ;
 
+
+% Apply ZOH function
 rxSigSpec = kron(rxSig, ones(nSamp,1));
 
+% Compute error vector magnitude
 [rmsEVM,maxEVM,pctEVM,numSym] = evm(rxSig,txSig);
 fprintf('Comparing input data and   mod data: rmsEVM = %2.3f%%\n',rmsEVM)
 
-rxdata = pskdemod(rxSig,M,phi,'bin');
-A = [rxdata, txdata, rxdata==txdata];
+% Plot and save results
 pos = [343 343 560 343];
 
 figure('Position',pos)
