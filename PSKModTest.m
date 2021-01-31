@@ -2,15 +2,16 @@
 clc
 clear all
 close all
+pos = [343 343 560 343];
 
 % Set up parameters
-Fs = 2.0e9;         % Sampling rate
-Fc = 0.3e9;         % Center frequency
-BW = Fc/3;          % Bandwidth
+Fs = 5.0e9;         % Sampling rate
+Fc = 0.5e9;         % Center frequency
+BW = Fs/500;        % Bandwidth
 M = 64;             % Modulation order
 k = log2(M);        % Bits/symbol
-n = 2e3;            % Transmitted bits
-nSamp = 10*k;       % Samples per symbol
+n = 1e3;            % Transmitted bits
+nSamp = 24*k;       % Samples per symbol
 span = 1;           % Filter span in symbols
 rolloff = 0.2;      % Rolloff factor
 
@@ -20,7 +21,8 @@ evm = comm.EVM('MaximumEVMOutputPort',true,...
     'SymbolCountOutputPort',true);
 
 % Create random data
-txdata = randi([0 M-1],n,1); 
+txdata = randi([0 M-1],n,1);
+txdata = csvread('txdata1.csv');
 
 % Apply PSK modulation
 phi = 0;
@@ -37,38 +39,33 @@ txSigShapeQ = txfilter(txSigQ, nSamp, span, rolloff);
 txSigShape = txSigShapeI + 1j*txSigShapeQ;
 
 % Apply upconversion
-txSigUp = upConvert(txSigShape,Fc,Fs);
+txSigUp = upConvert(txSigShapeI,txSigShapeQ,Fc,Fs);
 
 % Apply downconversion
 [rxSigDwnI, rxSigDwnQ] = dwnConvert(txSigUp,Fc,Fs);
 rxSigDwn = rxSigDwnI + 1j*rxSigDwnQ;
 
 % Apply lowpass filtering
-rxSigLPFI = lowpass(rxSigDwnI,BW,Fs,'ImpulseResponse','iir','Steepness',0.95);
-rxSigLPFQ = lowpass(rxSigDwnQ,BW,Fs,'ImpulseResponse','iir','Steepness',0.95);
+rxSigLPFI = lowpass(rxSigDwnI,BW,Fs);
+rxSigLPFQ = lowpass(rxSigDwnQ,BW,Fs);
 
 % Apply pusle-shaping with SRRC
 rxSigShapeI = rxfilter(rxSigLPFI, nSamp, span, rolloff);
 rxSigShapeQ = rxfilter(rxSigLPFQ, nSamp, span, rolloff);
 rxSig = rxSigShapeI + 1j*rxSigShapeQ;
 
-
 % Apply ZOH function
 rxSigSpec = kron(rxSig, ones(nSamp,1));
 
 % Compute error vector magnitude
 [rmsEVM,maxEVM,pctEVM,numSym] = evm(rxSig,txSig);
-fprintf('Comparing input data and   mod data: rmsEVM = %2.3f%%\n',rmsEVM)
-
-% Plot and save results
-pos = [343 343 560 343];
+fprintf('rmsEVM = %2.3f%%\n',rmsEVM)
 
 figure('Position',pos)
 pltspectrum(txSigSpec, Fs)
 plotname = 'Transmit Baseband Signal';
 title(plotname)
 savefig(plotname)
-
 
 figure('Position',pos)
 pltspectrum(txSigShape, Fs)
@@ -112,30 +109,39 @@ plotname = 'Receive Constellation';
 title(plotname)
 savefig(plotname)
 
+% Two channel transmitter
+% Create random data
+txdata2 = randi([0 M-1],n,1); 
+txdata2 = csvread('txdata2.csv');
 
-return
-figure
-subplot(231)
-pwelch(txSigSpec,[],[],[],Fs,'centered')
-title('TX Baseband Signal')
+% Apply PSK modulation
+phi = 0;
+txSig2 = pskmod(txdata2,M,phi);
+txSigI2 = real(txSig2);
+txSigQ2 = imag(txSig2);
 
-subplot(232)
-pwelch(txSigShape,[],[],[],Fs,'centered')
-title('TX Pulse-Shaped Signal')
+% Apply ZOH function
+txSigSpec2 = kron(txSig2, ones(nSamp,1));
 
-subplot(233)
-pwelch(txSigUp,[],[],[],Fs,'centered')
-title('TX Upconverted Signal')
+% Apply pusle-shaping with SRRC
+txSigShapeI2 = txfilter(txSigI2, nSamp, span, rolloff);
+txSigShapeQ2 = txfilter(txSigQ2, nSamp, span, rolloff);
 
+% Apply upconversion
+txSigUp2 = upConvert(txSigShapeI2,txSigShapeQ2,1.5*Fc,Fs);
 
-subplot(234)
-pwelch(rxSigDwnI,[],[],[],Fs,'centered')
-title('RX Downconverted Signal')
+twochannel = txSigShape + 2*txSigUp2;
+figure('Position',pos)
+pltspectrum(twochannel, Fs)
+plotname = 'Multi-Tone Scenario';
+title(plotname)
+savefig(plotname)
 
-subplot(235)
-pwelch(rxSigLPFI,[],[],[],Fs,'centered')
-title('RX Downconverted LPF Signal')
-
-subplot(236)
-pwelch(rxSigSpec,[],[],[],Fs,'centered')
-title('RX Pulse-Shaped Signal')
+% Plot and save results
+pos = [343 343 560 343];
+figure('Position',pos)
+pltspectrum(rxSigLPFI, Fs)
+xlim([-45 45]*1e-3)
+plotname = 'Main-Channel Zoomed-In';
+title(plotname)
+savefig(plotname)
